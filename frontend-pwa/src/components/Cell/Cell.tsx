@@ -12,7 +12,10 @@ function Cell({value,row,col}: Props) {
   const {validationState} = useContext<ContextType>(WordleContext);
 
   return (
-    <div className={`${StyleCss.cell} ${validationState[row][col] === "valid" ? StyleCss.in : validationState[row][col] === "in" ? StyleCss.inWord:"" }`}>{value}</div>
+    <div className={`${StyleCss.cell}`}>
+      <div className={`${StyleCss.cell} ${validationState[row][col] === "valid" ? StyleCss.in : validationState[row][col] === "in" ? StyleCss.inWord: validationState[row][col] === "wrong" ? StyleCss.wrong : ""}`}>{value}</div>
+    </div>
+    
   )
 }
 

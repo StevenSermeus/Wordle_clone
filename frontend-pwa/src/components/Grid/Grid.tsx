@@ -37,6 +37,22 @@ function Grid({size}: Props){
         y: number,
         value: String
     }
+    function flashError(){
+        setValidation(update(validation, ({ x, y, value }: functionCall) => {
+            if(y === rowId){
+                return "wrong";
+            }
+            return value;
+        }));
+        setTimeout(() => {
+            setValidation(update(validation, ({ x, y, value }: functionCall) => {
+                if(value === "wrong"){
+                    return "";
+                }
+                return value;
+            }));
+        }, 1000);
+    }
     const handleEvent = (e:KeyboardEvent) => {
         if(rowId < 6){
         if(e.key.match(/^[a-zA-Z]$/) && colId < size){
@@ -59,21 +75,29 @@ function Grid({size}: Props){
 
             if(size === 5){
                 if(!list.word5.includes(guess.toLowerCase())){
-                    alert("Wrong Word");
+                    flashError();
                     return
                 }
             }else if(size === 6){
                 if(!list.word6.includes(guess.toLowerCase())){
-                    alert("Wrong Word");
+                    flashError()
                     return
                 }
             }
             else if(size === 7){
                 if(!list.word7.includes(guess.toLowerCase())){
-                    alert("Wrong Word");
+                    flashError();
                     return
 
                 }
+            }
+            let guessed:Array<String> = []
+            for(let i = 0; i < rowId; i++){
+                guessed.push(wordle[i].join("").toUpperCase());
+            }
+            if(guessed.includes(guess.toUpperCase())){
+                flashError();
+                return
             }
             let newValidation = [...validation];
             if(guess === word){
@@ -81,7 +105,8 @@ function Grid({size}: Props){
                 setValidation(newValidation);
                 setIsFinished(true);
             }else{
-                let tempWord = [];
+                let tempWord = []
+                //get all the word in the wordle
                 for(let i = 0; i < size; i++){
                     if(guess[i] === word[i]){
                         newValidation[rowId][i] = "valid";
@@ -169,7 +194,7 @@ function Grid({size}: Props){
         )}
         )}
   </div>
-    {isFinished && <> <button className={StyleCss.btn} onClick={() => restart()}>Restart the game</button></>}
+    {isFinished && <> <button className={StyleCss.btn} onClick={() => restart()}>Restart the game : {word}</button></>}
   </WordleContext.Provider>
   )
 }
