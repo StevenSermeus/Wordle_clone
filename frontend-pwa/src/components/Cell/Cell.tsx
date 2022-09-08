@@ -1,4 +1,3 @@
-import StyleCss from './Cell.module.css'
 import {useContext} from 'react'
 import {WordleContext, ContextType} from '../Grid/Grid'
 interface Props {
@@ -12,8 +11,8 @@ function Cell({value,row,col}: Props) {
   const {validationState} = useContext<ContextType>(WordleContext);
 
   return (
-    <div className={`${StyleCss.cell}`}>
-      <div className={`${validationState[row][col] === "valid" ? StyleCss.in : validationState[row][col] === "in" ? StyleCss.inWord: validationState[row][col] === "wrong" ? StyleCss.wrong : ""}`}>{value}</div>
+    <div className={`flex border-2 border-accent w-24 h-24`}>
+      <div className={`cell ${validationState[row][col]} `}>{value}</div>
     </div>
     
   )

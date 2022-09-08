@@ -1,6 +1,5 @@
 import Cell from '../Cell/Cell'
 import {useState, useEffect,createContext} from 'react'
-import StyleCss from './Grid.module.css'
 import list from './list.json'
 
 const defaultArray = (size: number) => {
@@ -182,10 +181,10 @@ function Grid({size}: Props){
 
   return (
     <WordleContext.Provider value={{validationState: validation, setValidationState: setValidation}}>
-    <div className={StyleCss.wordle}>
+    <div className={"flex flex-col justify-center content-center items-center mt-5"}>
     {wordle.map((row:Array<String>, i:number) => {
         return (
-            <div key={i} className={StyleCss.row}>
+            <div key={i} className={"flex "}>
                 {row.map((cell:String, j:number) => {
                     return (
                         <Cell key={`${i} ${j}`} value={cell} row={i} col={j}/>
@@ -194,7 +193,7 @@ function Grid({size}: Props){
         )}
         )}
   </div>
-    {isFinished && <> <button className={StyleCss.btn} onClick={() => restart()}>Restart the game : {word}</button></>}
+    {isFinished && <> <button className={"flex mx-auto mt-5 btn btn-primary"} onClick={() => restart()}>Restart the game : {word}</button></>}
   </WordleContext.Provider>
   )
 }
