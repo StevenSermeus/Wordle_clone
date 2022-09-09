@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer components {
   .in {
     @apply bg-secondary rounded-full;
@@ -10,7 +9,7 @@
   .valid{
     @apply bg-primary;
   }
-  /* ... */
+
   .cell{
     @apply text-7xl w-full h-full flex justify-center items-center ease-in-out ;
   }

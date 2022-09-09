@@ -1,3 +1,4 @@
+
 import Wordle from './Pages/Wordle/Wordle';
 import './App.css';
 import {useState, useEffect, createContext} from 'react';
@@ -35,7 +36,7 @@ function App() {
   return (
     <AppContext.Provider value={{login, setLogin, theme, setTheme}}>
     <div data-theme={theme} className=' min-h-screen'>
-    <Wordle></Wordle>
+    <Wordle />
     </div>
     </AppContext.Provider>
 
@@ -43,3 +44,4 @@ function App() {
 }
 
 export default App;
+
