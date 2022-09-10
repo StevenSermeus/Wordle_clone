@@ -35,9 +35,9 @@ function App() {
 
   return (
     <AppContext.Provider value={{login, setLogin, theme, setTheme}}>
-    <div data-theme={theme} className=' min-h-screen'>
-    <Wordle />
-    </div>
+      <div data-theme={theme} className=' min-h-screen min-w-min'>
+        <Wordle />
+      </div>
     </AppContext.Provider>
 
   );

@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer components {
+  :root{
+    @apply bg-current;
+  }
   .in {
     @apply bg-secondary rounded-full;
   }
@@ -11,9 +14,21 @@
   }
 
   .cell{
-    @apply text-7xl w-full h-full flex justify-center items-center ease-in-out ;
+    @apply md:text-7xl sm:text-6xl text-6xl w-full h-full flex justify-center items-center ease-in-out ;
   }
   .wrong{
     @apply bg-error ease-in-out duration-500;
+  }
+  .key-not-in{
+    @apply btn btn-ghost btn-outline;
+  }
+  .key-in{
+    @apply btn-secondary;
+  }
+  .key{
+    @apply md:pl-4 md:pr-4 sm:pl-2 sm:pr-2 sm:h-2 mr-1 ml-1;
+  }
+  .key-valid{
+    @apply btn-primary
   }
 }

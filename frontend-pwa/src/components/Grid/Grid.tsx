@@ -1,6 +1,8 @@
 import Cell from '../Cell/Cell'
-import {useState, useEffect,createContext} from 'react'
+import {useState, useEffect,createContext, useRef} from 'react'
 import list from './list.json'
+import Key from '../Key/Key'
+
 
 const defaultArray = (size: number) => {
     const grid: Array<Array<String>> = [];
@@ -12,17 +14,29 @@ const defaultArray = (size: number) => {
     }
     return grid;
 }
+
 export type ContextType = {
     validationState: Array<Array<String>>;
     setValidationState: (value: Array<Array<String>>) => void;
 }
 
+
+
 export const WordleContext = createContext<ContextType>({validationState: defaultArray(5), setValidationState: () => {}});
 interface Props{
     size: number
 }
-const update = (aa:Array<Array<String>>, fn:Function) =>
-  aa.map((rowItem, y) => rowItem.map((value, x) => fn({ x, y, value })));
+type Letter = {
+    letter: string
+    state: string
+}
+const generateAlphabet = () => {
+    const alphabet:Array<Letter> = [];
+    for (let i = 0; i < 26; i++) {
+        alphabet.push({letter: String.fromCharCode(65 + i).toUpperCase(), state:""});
+    }
+    return alphabet;
+}
 
 function Grid({size}: Props){
     const [validation, setValidation] = useState<Array<Array<String>>>(defaultArray(size));
@@ -31,153 +45,171 @@ function Grid({size}: Props){
     const [word, setWord] = useState("");
     const [rowId, setRowId] = useState<number>(0);
     const [colId, setColId] = useState<number>(0);
-    type functionCall = {
-        x: number,
-        y: number,
-        value: String
-    }
+    const [alphabet, setAlphabet] = useState<Array<Letter>>(generateAlphabet());
+
+    const rowIdRef = useRef(rowId);
+    const colIdRef = useRef(colId);
+    const wordleRef = useRef(wordle);
+    const validationRef = useRef(validation);
+    const sizeRef = useRef(size);
+    const wordRef = useRef(word);
+    const alphabetRef = useRef(alphabet);
+    const isFinishedRef = useRef(isFinished);
+
+    alphabetRef.current = alphabet;
+    isFinishedRef.current = isFinished;
+    wordRef.current = word;
+    sizeRef.current = size;
+    rowIdRef.current = rowId;
+    colIdRef.current = colId;
+    wordleRef.current = wordle;
+    validationRef.current = validation;
+
     function flashError(){
-        setValidation(update(validation, ({ x, y, value }: functionCall) => {
-            if(y === rowId){
-                return "wrong";
-            }
-            return value;
-        }));
+        let newValidation = [...[...validationRef.current]];
+        for(let i = 0; i < sizeRef.current; i++){
+            newValidation[rowIdRef.current][i] = "wrong";
+        }
+        setValidation(newValidation);
         setTimeout(() => {
-            setValidation(update(validation, ({ x, y, value }: functionCall) => {
-                if(value === "wrong"){
-                    return "";
-                }
-                return value;
-            }));
+            let validationCleanUp = [...[...validationRef.current]];
+            for(let i = 0; i < sizeRef.current; i++){
+                validationCleanUp[rowIdRef.current][i] = "";
+            }
+            setValidation(validationCleanUp);
         }, 1000);
     }
-    const handleEvent = (e:KeyboardEvent) => {
-        if(rowId < 6){
-        if(e.key.match(/^[a-zA-Z]$/) && colId < size){
-            setWordle((prev) =>
-            update(prev, ({ x, y, value }:functionCall) => {
-              if (x === colId && y === rowId) {
-                return e.key.toLocaleUpperCase();
-              }
-              return prev[y][x];
-            }));
-            setColId(colId+1);
-        }else if(e.key === "Backspace" && colId > 0){
-            let newWordle = [...wordle];
-            newWordle[rowId][colId-1] = "";
-            setWordle(newWordle);
-            setColId(colId-1);
+    const handleKey = (key:string) => {
+        if(isFinishedRef.current){
+            return;
         }
-        else if(e.key === "Enter" && colId === size){
-            let guess = wordle[rowId].join("").toUpperCase();
 
-            if(size === 5){
-                if(!list.word5.includes(guess.toLowerCase())){
-                    flashError();
-                    return
-                }
-            }else if(size === 6){
-                if(!list.word6.includes(guess.toLowerCase())){
-                    flashError()
-                    return
-                }
+        if(key.match(/^[a-zA-Z]$/)){
+            if(colIdRef.current < sizeRef.current){
+                let wordleNew = [...wordleRef.current];
+                wordleNew[rowIdRef.current][colIdRef.current] = key.toUpperCase();
+                setWordle(wordleNew);
+                setColId(colIdRef.current + 1);
             }
-            else if(size === 7){
-                if(!list.word7.includes(guess.toLowerCase())){
-                    flashError();
-                    return
+        }else{
+            if(key === "Backspace" && colIdRef.current > 0){
 
-                }
-            }
-            let guessed:Array<String> = []
-            for(let i = 0; i < rowId; i++){
-                guessed.push(wordle[i].join("").toUpperCase());
-            }
-            if(guessed.includes(guess.toUpperCase())){
-                flashError();
-                return
-            }
-            let newValidation = [...validation];
-            if(guess === word){
-                newValidation[rowId] = newValidation[rowId].map(() => "valid");
-                setValidation(newValidation);
-                setIsFinished(true);
+                    let wordleNew = [...wordleRef.current];
+                    wordleNew[rowIdRef.current][colIdRef.current - 1] = "";
+                    setWordle(wordleNew);
+                    setColId(colIdRef.current - 1);
             }else{
-                let tempWord = []
-                //get all the word in the wordle
-                for(let i = 0; i < size; i++){
-                    if(guess[i] === word[i]){
-                        newValidation[rowId][i] = "valid";
+                if(key ==="Enter"){
+                    if(colIdRef.current < sizeRef.current)
+                        return;
+                    let guess = wordleRef.current[rowIdRef.current].join("");
+
+                    if(sizeRef.current === 5){
+                        if(!list.word5.includes(guess.toLowerCase())){
+                            flashError();
+                            return;
+                        }
+                    }
+                    if(sizeRef.current === 6){
+                        if(!list.word6.includes(guess.toLowerCase())){
+                            flashError();
+                            return;
+                        }
+                    }
+                    if(sizeRef.current === 7){
+                        if(!list.word7.includes(guess.toLowerCase())){
+                            flashError();
+                            return;
+                        }
+                    }
+                    
+                    if(wordRef.current === guess){
+                        let newValidation = [...[...validationRef.current]];
+                        let newAlphabet = [...alphabetRef.current];
+                        for(let i = 0; i < sizeRef.current; i++){
+                            newValidation[rowIdRef.current][i] = "valid";
+                            newAlphabet[guess.charCodeAt(i) - 65].state = "key-valid";
+                        }
+                        setAlphabet(newAlphabet);
+                        setValidation(newValidation);
+                        setIsFinished(true);
+                        return;
                     }else{
-                        tempWord.push(word[i]);
-                    }
-                }
-                for(let i = 0; i < size; i++){
-                    if(word[i] !== guess[i]){
-                        newValidation[rowId][i] = tempWord.includes(guess[i]) ? "in" : "";
-                    }
-                }
-                setValidation(newValidation);
-                setRowId(rowId+1);
-                setColId(0);
-            }
-            if(rowId === 5){
-                setIsFinished(true);
+                        let newValidation = [...[...validationRef.current]];
+                        let newAlphabet = [...alphabetRef.current];
+                        let removableWord = wordRef.current;
+                        let removableArray:Array<String> = removableWord.split('')
+                        for(let i = 0; i < sizeRef.current; i++){
+                            if(guess[i] === wordRef.current[i]){
+                                removableArray = removableWord.split('')
+                                removableArray[i] = ' '
+                                removableWord = removableArray.join('')
+                            }
+                        }
+                            for(let i = 0; i < sizeRef.current; i++){
+                                if(removableWord[i] === ' '){
+                                    newValidation[rowIdRef.current][i] = "valid"
+                                    newAlphabet[guess[i].charCodeAt(0) - 65].state = "key-valid"
+                                }
+                                else if(removableArray.includes(guess[i])){
+                                    newValidation[rowIdRef.current][i] = "in"
+                                    newAlphabet[guess[i].charCodeAt(0) - 65].state = newAlphabet[guess[i].charCodeAt(0) - 65].state === "key-valid" ? "key-valid" : "key-in";
+                                }else{
+                                    newAlphabet[guess[i].charCodeAt(0) - 65].state = "key-not-in"
+                                }
+                            }
+                            setAlphabet(newAlphabet);
+                            setValidation(newValidation);
+                            setRowId(rowIdRef.current + 1)
+                            setColId(0)
+                        }
             }
         }
     }
+}    
+
+function restart(){
+    setWordle(defaultArray(size));
+    setValidation(defaultArray(size));
+    setRowId(0);
+    setColId(0);
+    setIsFinished(false);
+    setAlphabet(generateAlphabet());
+    if(size === 5){
+        setWord(list.word5[Math.floor(Math.random() * list.word5.length)].toUpperCase());
+    }else if(size === 6){
+        setWord(list.word6[Math.floor(Math.random() * list.word6.length)].toUpperCase());
+    }
+    else if(size === 7){
+        setWord(list.word7[Math.floor(Math.random() * list.word7.length)].toUpperCase());
+    }
 }
+
+    const handleEventKeyboard = (e:KeyboardEvent) => {
+        handleKey(e.key);
+    }
     
 
     useEffect(() => {
-        document.addEventListener("keyup", handleEvent);
+        document.addEventListener("keyup", handleEventKeyboard);
         return () => {
-            document.removeEventListener("keyup", handleEvent);
+            document.removeEventListener("keyup", handleEventKeyboard);
         }
         }, [])
 
         useEffect(() => {
-            setColId(0);
-            setRowId(0);
-            setWordle(defaultArray(size));
-            setValidation(defaultArray(size));  
-            setIsFinished(false);
-            if(size === 5){
-                setWord(list.word5[Math.floor(Math.random() * list.word5.length)].toUpperCase());
-            }else if(size === 6){
-                setWord(list.word6[Math.floor(Math.random() * list.word6.length)].toUpperCase());
-            }
-            else if(size === 7){
-                setWord(list.word7[Math.floor(Math.random() * list.word7.length)].toUpperCase());
-            }
+            restart();
 
         }, [size])
 
-        useEffect(() => {
-        document.removeEventListener("keyup", handleEvent);
-        document.addEventListener("keyup", handleEvent);
-        return () => {
-            document.removeEventListener("keyup", handleEvent);
+    useEffect(()=> {
+        if(rowIdRef.current === 6){
+            setIsFinished(true);
         }
-        },[colId,rowId])
+    },[rowId])
 
 
-    function restart(){
-        setWordle(defaultArray(size));
-        setValidation(defaultArray(size));
-        setRowId(0);
-        setColId(0);
-        setIsFinished(false);
-        if(size === 5){
-            setWord(list.word5[Math.floor(Math.random() * list.word5.length)].toUpperCase());
-        }else if(size === 6){
-            setWord(list.word6[Math.floor(Math.random() * list.word6.length)].toUpperCase());
-        }
-        else if(size === 7){
-            setWord(list.word7[Math.floor(Math.random() * list.word7.length)].toUpperCase());
-        }
-    }
+
 
   return (
     <WordleContext.Provider value={{validationState: validation, setValidationState: setValidation}}>
@@ -193,9 +225,47 @@ function Grid({size}: Props){
         )}
         )}
   </div>
+  <div className='keyboard'>
+        <div className='flex justify-center content-center mt-3'>
+            <Key letter="A" state={alphabet['a'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="Z" state={alphabet['z'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="E" state={alphabet['e'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="R" state={alphabet['r'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="T" state={alphabet['t'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="Y" state={alphabet['y'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="U" state={alphabet['u'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="I" state={alphabet['i'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="O" state={alphabet['o'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="P" state={alphabet['p'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+        </div>
+        <div className='flex justify-center content-center mt-1'>
+            <Key letter="Q" state={alphabet['q'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="S" state={alphabet['s'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="D" state={alphabet['d'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="F" state={alphabet['f'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="G" state={alphabet['g'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="H" state={alphabet['h'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="J" state={alphabet['j'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="K" state={alphabet['k'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="L" state={alphabet['l'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="M" state={alphabet['m'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+        </div>
+        <div className='flex justify-center content-center mt-1'>
+            <Key letter="Enter" state={{letter:"Enter",state:""}} handleClik={handleKey}/>
+            <Key letter="W" state={alphabet['w'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="X" state={alphabet['x'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="C" state={alphabet['c'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="V" state={alphabet['v'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="B" state={alphabet['b'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="N" state={alphabet['n'.charCodeAt(0) - 97]} handleClik={handleKey}/>
+            <Key letter="Backspace" state={{letter:"Backspace",state:""}} handleClik={handleKey}/>
+
+        </div>
+  </div>
     {isFinished && <> <button className={"flex mx-auto mt-5 btn btn-primary"} onClick={() => restart()}>Restart the game : {word}</button></>}
   </WordleContext.Provider>
   )
+
 }
 
 export default Grid
