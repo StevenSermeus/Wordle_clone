@@ -1,9 +1,7 @@
-import React from 'react'
-import NavBar from '../../components/NavBar/NavBar'
+import React from "react";
+import NavBar from "../../components/NavBar/NavBar";
 function Home() {
-  return (
-    <NavBar/>
-  )
+  return <NavBar />;
 }
 
-export default Home
+export default Home;
